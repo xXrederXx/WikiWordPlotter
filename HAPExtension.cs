@@ -23,4 +23,12 @@ public static class HAPExtension
             }
         }
     }
+
+    public static void RemoveDivById(HtmlNode root, string id){
+        SelectDivById(root, id)?.Remove();
+    }
+
+    public static void RemoveNodesByXPath(HtmlNode root, string xpath){
+        RemoveAllNodes(root.SelectNodes(xpath));
+    }
 }
