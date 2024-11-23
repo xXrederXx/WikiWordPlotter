@@ -39,7 +39,7 @@ public class UrlHandler
     /// <param name="urls">An array of URLs to add.</param>
     public void AddURL(IEnumerable<string> urls)
     {
-        foreach (var url in urls)
+        foreach (string url in urls)
         {
             AddURL(url);
         }
