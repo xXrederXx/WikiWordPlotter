@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using HtmlAgilityPack;
 
 namespace WebScraper;
@@ -15,20 +14,20 @@ public class Scraper
         {
             // Load the web page
             documentNode = new HtmlWeb().Load(url).DocumentNode;
+
+            // Select the main content node or throw an exception if not found
+            _contentNode = HAPExtension.SelectDivById(documentNode, "mw-content-text") 
+                        ?? throw new NullReferenceException("The document node has no content.");
+
+            // Clean up the content node by removing unnecessary sections
+            RemoveUnnecessarySections(_contentNode);
             
         }
-        catch (System.Exception)
+        catch (System.Exception e)
         {
-            System.Console.WriteLine(url + "Caused Aggregate Exeption" );
+            System.Console.WriteLine(url + "Caused Exeption\n" + e.Message);
             return;
         }
-
-        // Select the main content node or throw an exception if not found
-        _contentNode = HAPExtension.SelectDivById(documentNode, "mw-content-text") 
-                       ?? throw new NullReferenceException("The document node has no content.");
-
-        // Clean up the content node by removing unnecessary sections
-        RemoveUnnecessarySections(_contentNode);
     }
 
     /// <summary>
@@ -53,8 +52,8 @@ public class Scraper
     public string GetWikiText()
     {
         // Select <p> and <ul> nodes and combine their inner text
-        var textNodes = _contentNode.SelectNodes(".//p") ?? Enumerable.Empty<HtmlNode>();
-        textNodes = textNodes.Concat(_contentNode.SelectNodes(".//ul") ?? Enumerable.Empty<HtmlNode>());
+        IEnumerable<HtmlNode> textNodes = _contentNode.SelectNodes(".//p") ?? Enumerable.Empty<HtmlNode>(); // get all ps
+        textNodes = textNodes.Concat(_contentNode.SelectNodes(".//ul") ?? Enumerable.Empty<HtmlNode>()); // get all uls and add them to the list
 
         return textNodes
             .Select(node => HtmlEntity.DeEntitize(node.InnerText.Trim())) // Clean and decode text
@@ -65,29 +64,25 @@ public class Scraper
     /// <summary>
     /// Removes unnecessary sections (e.g., TOC, Literatur, Math, References) from the content node.
     /// </summary>
-    /// <param name="htmlNode">The root HTML node to clean.</param>
-    private static void RemoveUnnecessarySections(HtmlNode htmlNode)
+    /// <param name="rootNode">The root HTML node to clean.</param>
+    private static void RemoveUnnecessarySections(HtmlNode rootNode)
     {
-        // Helper to remove nodes by ID or XPath
-        void RemoveNodeById(string id) => HAPExtension.SelectDivById(htmlNode, id)?.Remove();
-        void RemoveNodesByXPath(string xpath) =>
-            HAPExtension.RemoveAllNodes(htmlNode.SelectNodes(xpath));
 
         // Remove table of contents
-        RemoveNodeById("toc");
+        HAPExtension.RemoveDivById(rootNode, "toc");
 
         // Remove 'Literatur' section and its following nodes
-        var literaturNode = htmlNode.SelectSingleNode("//*[@id='Literatur']");
+        HtmlNode literaturNode = rootNode.SelectSingleNode("//*[@id='Literatur']");
         if (literaturNode != null)
         {
-            RemoveNodesByXPath("following::*");
+            HAPExtension.RemoveNodesByXPath(rootNode, "following::*");
             literaturNode.Remove();
         }
 
         // Remove math sections
-        RemoveNodesByXPath("//math");
+        HAPExtension.RemoveNodesByXPath(rootNode, "//math");
 
         // Remove references
-        RemoveNodesByXPath("//*[@class='reference']");
+        HAPExtension.RemoveNodesByXPath(rootNode, "//*[@class='reference']");
     }
 }
