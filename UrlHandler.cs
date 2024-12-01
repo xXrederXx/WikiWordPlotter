@@ -11,7 +11,6 @@ public class UrlHandler
 
     public const string BaseUrl = "https://de.wikipedia.org";
     public const string RelativeBaseUrl = "/wiki/";
-
     public void LoadData(string[] completed, string[] notCompleted)
     {
 
@@ -74,5 +73,8 @@ public class UrlHandler
     public bool IsUrlValide(string url)
     {
         return !string.IsNullOrEmpty(url) && !url.Contains("Datei:") && (url.StartsWith(BaseUrl) || url.StartsWith(RelativeBaseUrl)) && !Completed.Contains(url) && !NotCompleted.Contains(url);
+    }
+    public static (string optimized, string normal) OptimizeURL(string url){
+        return (url.Replace(RelativeBaseUrl, "§s").Replace(BaseUrl, "§l"), url.Replace("§s", RelativeBaseUrl).Replace("§l", BaseUrl));
     }
 }
