@@ -22,6 +22,8 @@ static class MainClass
             Console.WriteLine("-h   --help                  show this menu");
             Console.WriteLine("-i   --image ?<Path>         Save a plotted Graph as an image. The path must be .png");
             Console.WriteLine("-l   --load ?<Path>          Load the preveousely collected data. The Path must be to a .json file");
+            Console.WriteLine("-o  --optimize <int> <bool>  Defines the threshold of the data safed. if it is 2 and a word occured once, it wont");
+            Console.WriteLine("                             get stored. The bool tells if the links are optimized when stored");
             Console.WriteLine("-s   --save ?<Path>          Save the collected data. The Path must be to a .json file");
             Console.WriteLine("-su  --start-url <URL>       Define a start Url. Please Not that it will need to be de.wikipedia.org links");
 
@@ -29,81 +31,114 @@ static class MainClass
         }
         if (args.Contains("-su") || args.Contains("--start-url"))
         {
-            string newStartUrl = args[argsList.IndexOf("-su") + 1 + argsList.IndexOf("--start-url") + 1];
-            // this just cheks if the URL is valide
-            if (urlHandeler.IsUrlValide(newStartUrl))
+            try
             {
-                appArguments.startUrl = newStartUrl;
+                string newStartUrl = args[argsList.IndexOf("-su") + 1 + argsList.IndexOf("--start-url") + 1];
+                // this just cheks if the URL is valide
+                if (urlHandeler.IsUrlValide(newStartUrl))
+                {
+                    appArguments.startUrl = newStartUrl;
+                }      
             }
+            catch (IndexOutOfRangeException){}
         }
         if (args.Contains("-s") || args.Contains("--save"))
         {
             appArguments.saveData = true;
 
-            string newSavePath = args[argsList.IndexOf("-s") + 1 + argsList.IndexOf("--save") + 1];
-
-            // check if it is json file
-            if (Path.GetExtension(newSavePath) == ".json")
+            try
             {
-                appArguments.savePath = newSavePath;
+                string newSavePath = args[argsList.IndexOf("-s") + 1 + argsList.IndexOf("--save") + 1];
+    
+                // check if it is json file
+                if (Path.GetExtension(newSavePath) == ".json")
+                {
+                    appArguments.savePath = newSavePath;
+                }
             }
+            catch (IndexOutOfRangeException){}
+
         }
         if (args.Contains("-l") || args.Contains("--load"))
         {
             appArguments.loadData = true;
 
-            string newLoadPath = args[argsList.IndexOf("-l") + 1 + argsList.IndexOf("--load") + 1];
-
-            // check if it is json file
-            if (Path.GetExtension(newLoadPath) == ".json")
+            try
             {
-                appArguments.loadPath = newLoadPath;
+                string newLoadPath = args[argsList.IndexOf("-l") + 1 + argsList.IndexOf("--load") + 1];
+    
+                // check if it is json file
+                if (Path.GetExtension(newLoadPath) == ".json")
+                {
+                    appArguments.loadPath = newLoadPath;
+                }
             }
+            catch (IndexOutOfRangeException){}
         }
         if (args.Contains("-c") || args.Contains("--count"))
         {
-            string newCount = args[argsList.IndexOf("-c") + 1 + argsList.IndexOf("--count") + 1];
-            _ = int.TryParse(newCount, out appArguments.count);
+            try
+            {
+                string newCount = args[argsList.IndexOf("-c") + 1 + argsList.IndexOf("--count") + 1];
+                _ = int.TryParse(newCount, out appArguments.count);
+            }
+            catch (IndexOutOfRangeException){}
+        }
+        if (args.Contains("-o") || args.Contains("--optimize"))
+        {
+            try
+            {
+                string newoptimizationThreshold = args[argsList.IndexOf("-o") + 1 + argsList.IndexOf("--optimize") + 1];
+                string newoptimizeURL = args[argsList.IndexOf("-o") + 1 + argsList.IndexOf("--optimize") + 1 + 1];
+                _ = int.TryParse(newoptimizationThreshold, out appArguments.optimizationThreshold);
+                _ = bool.TryParse(newoptimizeURL, out appArguments.optimizeURLs);
+            }
+            catch (IndexOutOfRangeException){}
         }
         if (args.Contains("-i") || args.Contains("--image"))
         {
             appArguments.saveImg = true;
 
-            string newImgPath = args[argsList.IndexOf("-i") + 1 + argsList.IndexOf("--image") + 1];
-
-            // check if it is json file
-            if (Path.GetExtension(newImgPath) == ".png")
+            try
             {
-                appArguments.imagePath = newImgPath;
+                string newImgPath = args[argsList.IndexOf("-i") + 1 + argsList.IndexOf("--image") + 1];
+    
+                // check if it is json file
+                if (Path.GetExtension(newImgPath) == ".png")
+                {
+                    appArguments.imagePath = newImgPath;
+                }
             }
+            catch (IndexOutOfRangeException){}
         }
 
         RunApp(appArguments);
     }
-    private static void RunApp(AppArguments appArguments)
+    private static void RunApp(AppArguments args)
     {
         ConsoleUtility.ColoredMessage[] text =
         [
-            new($"Settings:\n{halfTab}Start Url:\t\t"), new(appArguments.startUrl),
-            new($"\n{halfTab}Websites to Count:\t"), new(appArguments.count.ToString(), appArguments.count == 0 ? ConsoleColor.DarkGray : ConsoleColor.White),
-            new($"\n{halfTab}Do Save Data:\t\t"), new(appArguments.saveData.ToString(), appArguments.saveData ? ConsoleColor.Green : ConsoleColor.Red), new("\t(Path) "), new(appArguments.savePath),
-            new($"\n{halfTab}Do Load Data:\t\t"), new(appArguments.loadData.ToString(), appArguments.loadData ? ConsoleColor.Green : ConsoleColor.Red), new("\t(Path) "), new(appArguments.loadPath),
-            new($"\n{halfTab}Do Save Plot:\t\t"), new(appArguments.saveImg.ToString(), appArguments.loadData ? ConsoleColor.Green : ConsoleColor.Red), new("\t(Path) "), new(appArguments.imagePath),
+            new($"Settings:\n{halfTab}Start Url:\t\t"), new(args.startUrl),
+            new($"\n{halfTab}Websites to Count:\t"), new(args.count.ToString(), args.count == 0 ? ConsoleColor.DarkGray : ConsoleColor.White), 
+            new($"\n{halfTab}Optimization:\t\t"), new(args.optimizationThreshold.ToString(), args.optimizationThreshold == 0 ? ConsoleColor.DarkGray : ConsoleColor.White), new("\t(URLs)" + halfTab), new(args.optimizeURLs.ToString(), args.optimizeURLs ? ConsoleColor.Green : ConsoleColor.Red),
+            new($"\n{halfTab}Do Save Data:\t\t"), new(args.saveData.ToString(), args.saveData ? ConsoleColor.Green : ConsoleColor.Red), new("\t(Path)" + halfTab), new(args.savePath),
+            new($"\n{halfTab}Do Load Data:\t\t"), new(args.loadData.ToString(), args.loadData ? ConsoleColor.Green : ConsoleColor.Red), new("\t(Path)" + halfTab), new(args.loadPath),
+            new($"\n{halfTab}Do Save Plot:\t\t"), new(args.saveImg.ToString(), args.saveImg ? ConsoleColor.Green : ConsoleColor.Red), new("\t(Path)" + halfTab), new(args.imagePath),
             new($"\n\nWrite -h or --help to see the arguments.\n")
         ];
         ConsoleUtility.WriteMany(text);
 
-        if (appArguments.loadData)
+        if (args.loadData)
         {
-            LoadData(appArguments.loadPath);
+            LoadData(args.loadPath);
         }
 
-        ProcessURL(appArguments.startUrl); // Just the startup URL you can change this
+        ProcessURL(args.startUrl); // Just the startup URL you can change this
 
-        if(appArguments.count == 0){
+        if(args.count == 0){
             Console.WriteLine("How Many Websites do you want to count");
 
-            while (!int.TryParse(Console.ReadLine(), out appArguments.count))
+            while (!int.TryParse(Console.ReadLine(), out args.count))
             {
                 System.Console.WriteLine("Write a number");
             }
@@ -112,7 +147,7 @@ static class MainClass
         Stopwatch sw = new Stopwatch();
         sw.Start();
 
-        Parallel.For(0, appArguments.count, (i) =>
+        Parallel.For(0, args.count, (i) =>
         {
             ProcessURL(urlHandeler.GetURL());
         });
@@ -121,15 +156,15 @@ static class MainClass
         Console.WriteLine("time -> " + sw.ElapsedMilliseconds + "ms");
         Console.WriteLine("words -> " + WordCounts.Keys.Count);
 
-        if(appArguments.saveImg){
+        if(args.saveImg){
             List<KeyValuePair<string, int>> sortedWordList = WordCounts.OrderByDescending(x => x.Value).ToList();
-            _ = new Plotter(sortedWordList, AmountOfWordsOnPlot, appArguments.imagePath);
+            _ = new Plotter(sortedWordList, AmountOfWordsOnPlot, args.imagePath);
         }
 
-        if (appArguments.saveData)
+        if (args.saveData)
         {
-            JsonUtility.SaveToJson(new AppData(WordCounts.ToArray(), urlHandeler.CompletedURLs, urlHandeler.NotCompletedURLs), appArguments.savePath);
-            JsonUtility.OptimizeJsonFile(appArguments.savePath, 1);
+            JsonUtility.SaveToJson(new AppData(WordCounts.Select(x => (kvpOptimized<string, int>)x).ToArray(), urlHandeler.CompletedURLs, urlHandeler.NotCompletedURLs), args.savePath);
+            JsonUtility.OptimizeJsonFile(args.savePath, args.optimizationThreshold, args.optimizeURLs);
         }
     }
     private static void LoadData(string path)
@@ -173,6 +208,8 @@ public class AppArguments(string StartUrl, string SavePath, string LoadPath, str
     public bool saveImg;
     public bool saveData;
     public bool loadData;
+    public bool optimizeURLs;
     public int count;
+    public int optimizationThreshold;
 
 }
