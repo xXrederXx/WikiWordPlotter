@@ -23,7 +23,14 @@ public static class JsonUtility
             json = sw.ReadToEnd();
         }
 
-        return JsonConvert.DeserializeObject<AppData>(json);
+        AppData? data = JsonConvert.DeserializeObject<AppData>(json);
+        if(data is null) return null;
+
+        // convert from optimized to normal
+        string[] newURLCompletet = data.CompletedURLs.Select(x => UrlHandler.OptimizeURL(x).normal).ToArray();
+        string[] newURLNotCompletet = data.NotCompletedURLs.Select(x => UrlHandler.OptimizeURL(x).normal).ToArray();
+
+        return new AppData(data.WordCounts, newURLCompletet, newURLNotCompletet);
     }
 
     public static void ClearJson(string path)
@@ -34,19 +41,45 @@ public static class JsonUtility
         }
     }
 
-    public static void OptimizeJsonFile(string path, int threshold)
+    public static void OptimizeJsonFile(string path, int countThreshold, bool optimizeURLs)
     {
         AppData? data = ReadJson(path);
         if (data is null) return;
 
-        KeyValuePair<string, int>[] newWordCounts = data.WordCounts.Where(x => x.Value > threshold).ToArray();
+        // optimize the words
+        kvpOptimized<string, int>[] newWordCounts = data.WordCounts
+            .Where(x => x.v > countThreshold)
+            .ToArray();
 
+        string[] newURLCompletet = data.CompletedURLs;
+        string[] newURLNotCompletet = data.NotCompletedURLs;
+        if(optimizeURLs){
+            newURLCompletet = newURLCompletet.Select(x => UrlHandler.OptimizeURL(x).optimized).ToArray();
+            newURLNotCompletet = newURLNotCompletet.Select(x => UrlHandler.OptimizeURL(x).optimized).ToArray();
+        }
+        // cleare th file
         ClearJson(path);
 
-        SaveToJson(new AppData(newWordCounts, data.CompletedURLs, data.NotCompletedURLs), path);
+        SaveToJson(new AppData(newWordCounts, newURLCompletet, newURLNotCompletet), path);
     }
-
 }
 
 
-public record AppData(KeyValuePair<string, int>[] WordCounts, string[] CompletedURLs, string[] NotCompletedURLs) { }
+public record AppData(kvpOptimized<string, int>[] WordCounts, string[] CompletedURLs, string[] NotCompletedURLs) { }
+
+public struct kvpOptimized<TKey, TValue>{
+    public TKey k;
+    public TValue v;
+    public kvpOptimized(TKey key, TValue value)
+        {
+            this.k = key;
+            this.v = value;
+        }
+
+    public static explicit operator KeyValuePair<TKey, TValue>(kvpOptimized<TKey, TValue> kvp){
+        return new KeyValuePair<TKey, TValue>(kvp.k, kvp.v);
+    }
+    public static explicit operator kvpOptimized<TKey, TValue>(KeyValuePair<TKey, TValue> kvp){
+        return new kvpOptimized<TKey, TValue>(kvp.Key, kvp.Value);
+    }
+}
