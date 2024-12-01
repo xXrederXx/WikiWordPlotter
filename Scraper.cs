@@ -5,7 +5,6 @@ namespace WebScraper;
 public class Scraper
 {
     private readonly HtmlNode _contentNode;
-    private const string BaseUrl = "https://de.wikipedia.org";
 
     public Scraper(string url)
     {
@@ -16,12 +15,12 @@ public class Scraper
             documentNode = new HtmlWeb().Load(url).DocumentNode;
 
             // Select the main content node or throw an exception if not found
-            _contentNode = HAPExtension.SelectDivById(documentNode, "mw-content-text") 
+            _contentNode = HAPExtension.SelectDivById(documentNode, "mw-content-text")
                         ?? throw new NullReferenceException("The document node has no content.");
 
             // Clean up the content node by removing unnecessary sections
             RemoveUnnecessarySections(_contentNode);
-            
+
         }
         catch (System.Exception e)
         {
@@ -31,17 +30,14 @@ public class Scraper
     }
 
     /// <summary>
-    /// Retrieves all valid links from the content node.
+    /// Retrieves all links from the content node. Valid or not
     /// </summary>
     /// <returns>An array of absolute URLs.</returns>
     public string[] GetLinks()
     {
         return _contentNode.SelectNodes(".//a")?
             .Select(link => link.GetAttributeValue("href", ""))
-            .Where(href => !string.IsNullOrEmpty(href) && !href.Contains("Datei:") && (href.Contains("wikipedia") || href.Contains("wiki"))) // Filter out empty links and file links
-            .Select(href => href.StartsWith("https://") ? href : BaseUrl + href)      // Ensure links are absolute
-            .Distinct()                                                           // Remove duplicates
-            .ToArray() 
+            .ToArray()
             ?? Array.Empty<string>(); // Return an empty array if no links are found
     }
 
