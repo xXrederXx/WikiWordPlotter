@@ -51,10 +51,11 @@ public class Scraper
         IEnumerable<HtmlNode> textNodes = _contentNode.SelectNodes(".//p") ?? Enumerable.Empty<HtmlNode>(); // get all ps
         textNodes = textNodes.Concat(_contentNode.SelectNodes(".//ul") ?? Enumerable.Empty<HtmlNode>()); // get all uls and add them to the list
 
-        return textNodes
-            .Select(node => HtmlEntity.DeEntitize(node.InnerText.Trim())) // Clean and decode text
-            .Where(text => !string.IsNullOrWhiteSpace(text))             // Filter out empty text
-            .Aggregate("", (current, text) => current + " " + text);     // Concatenate into a single string
+        return string.Join(' ',
+            textNodes
+            .Select(node => HtmlEntity.DeEntitize(node.InnerText)) // Clean and decode text
+            .Where(text => !string.IsNullOrWhiteSpace(text))// Filter out empty text
+        );             
     }
 
     /// <summary>
@@ -75,10 +76,15 @@ public class Scraper
             literaturNode.Remove();
         }
 
-        // Remove math sections
+        // Remove nodes sections
         HAPExtension.RemoveNodesByXPath(rootNode, "//math");
+        HAPExtension.RemoveNodesByXPath(rootNode, "//code");
 
-        // Remove references
+        // Remove nodes class
+        HAPExtension.RemoveNodesByXPath(rootNode, "//*[@class='NavFrame']");
+        HAPExtension.RemoveNodesByXPath(rootNode, "//*[@class='NavContent']");
         HAPExtension.RemoveNodesByXPath(rootNode, "//*[@class='reference']");
+
+        HAPExtension.RemoveNodesByXPath(rootNode, "//*[contains(@style, 'display: none;')]");
     }
 }
