@@ -45,6 +45,7 @@ public class Plotter
         yValues = data.Select(x => (double)x.Value).ToList();
 
         MakeBars();
+        AddAnnotation(totalData);
 
         if (showLine)
         {
@@ -133,6 +134,9 @@ public class Plotter
         linePlot.SmoothTension = 1f;
     }
 
+    private void AddAnnotation(List<KeyValuePair<string, int>> data){
+        plot.Add.Annotation("Words Counted: " + data.Count.ToString(), Alignment.UpperRight);
+    }
     /// <summary>
     /// This function calculates all the Ticks
     /// </summary>
